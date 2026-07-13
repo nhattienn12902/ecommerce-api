@@ -1,0 +1,9 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/ecommerce
+    username: postgres
+    password: postgres # local only — never commit production credentials
+  data:
+    redis:
+      host: localhost
+      port: 6379
