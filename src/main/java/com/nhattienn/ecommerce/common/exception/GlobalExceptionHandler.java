@@ -34,7 +34,7 @@ public class GlobalExceptionHandler {
     // Bắt BusinessException VÀ mọi subclass (InsufficientStockException...) → 422
     @ExceptionHandler(BusinessException.class)
     public ResponseEntity<ErrorResponse> handleBusiness(BusinessException ex, HttpServletRequest request) {
-        return build(HttpStatus.UNPROCESSABLE_ENTITY, ex.getErrorCode(), ex.getMessage(), request);
+        return build(HttpStatus.UNPROCESSABLE_CONTENT, ex.getErrorCode(), ex.getMessage(), request);
     }
 
     // @Valid trên @RequestBody fail → 400, kèm danh sách field lỗi
