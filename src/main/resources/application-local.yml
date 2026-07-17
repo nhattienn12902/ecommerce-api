@@ -7,3 +7,9 @@ spring:
     redis:
       host: localhost
       port: 6379
+
+  # application-local.yml (dev only)
+# application-local.yml
+app:
+  jwt:
+    secret: local-dev-only-secret-change-me-min-32-bytes-please-xxxx
