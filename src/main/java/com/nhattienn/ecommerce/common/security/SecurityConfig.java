@@ -46,10 +46,11 @@ public class SecurityConfig {
             .sessionManagement(session ->
                     session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
-                    .requestMatchers(PUBLIC_PATHS).permitAll()
-                    .requestMatchers(HttpMethod.GET, "/api/v1/products/**", "/api/v1/categories/**").permitAll()
-                    .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
-                    .anyRequest().authenticated())
+        .requestMatchers("/api/v1/auth/logout-all").authenticated()   // ← PHẢI đứng trước
+        .requestMatchers(PUBLIC_PATHS).permitAll()                    // chứa /api/v1/auth/**
+        .requestMatchers(HttpMethod.GET, "/api/v1/products/**", "/api/v1/categories/**").permitAll()
+        .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
+        .anyRequest().authenticated())
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
             .exceptionHandling(exceptions -> exceptions
                     .authenticationEntryPoint(authenticationEntryPoint)

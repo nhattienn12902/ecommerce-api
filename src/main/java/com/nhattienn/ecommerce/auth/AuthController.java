@@ -2,12 +2,17 @@ package com.nhattienn.ecommerce.auth;
 
 import com.nhattienn.ecommerce.auth.dto.AuthResponse;
 import com.nhattienn.ecommerce.auth.dto.LoginRequest;
+import com.nhattienn.ecommerce.auth.dto.RefreshTokenRequest;
 import com.nhattienn.ecommerce.auth.dto.RegisterRequest;
 import com.nhattienn.ecommerce.common.response.ApiResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
+
+import java.util.UUID;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -50,4 +55,28 @@ public class AuthController {
         }
         return request.getRemoteAddr();
     }
+
+    @PostMapping("/refresh")
+public ResponseEntity<ApiResponse<AuthResponse>> refresh(
+        @Valid @RequestBody RefreshTokenRequest request,
+        HttpServletRequest httpRequest) {
+
+    AuthResponse response = authService.refresh(request.refreshToken(), clientIp(httpRequest));
+    return ResponseEntity.ok(ApiResponse.success(response, "Token refreshed."));
+}
+
+@PostMapping("/logout")
+public ResponseEntity<ApiResponse<Void>> logout(
+        @Valid @RequestBody RefreshTokenRequest request) {
+
+    authService.logout(request.refreshToken());
+    return ResponseEntity.ok(ApiResponse.success(null, "Logged out."));
+}
+
+@PostMapping("/logout-all")
+public ResponseEntity<ApiResponse<Void>> logoutAll(Authentication authentication) {
+    UUID userId = UUID.fromString(authentication.getName());
+    authService.logoutAll(userId);
+    return ResponseEntity.ok(ApiResponse.success(null, "All sessions logged out."));
+}
 }

@@ -4,10 +4,15 @@ import com.nhattienn.ecommerce.auth.dto.AuthResponse;
 import com.nhattienn.ecommerce.auth.dto.LoginRequest;
 import com.nhattienn.ecommerce.auth.dto.RegisterRequest;
 import com.nhattienn.ecommerce.common.exception.DuplicateResourceException;
+import com.nhattienn.ecommerce.common.exception.UnauthorizedException;
 import com.nhattienn.ecommerce.common.security.CustomUserDetails;
 import com.nhattienn.ecommerce.user.User;
 import com.nhattienn.ecommerce.user.UserRepository;
 import com.nhattienn.ecommerce.user.UserRole;
+
+import com.nhattienn.ecommerce.common.exception.UnauthorizedException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -22,12 +27,14 @@ import java.security.SecureRandom;
 import java.time.Instant;
 import java.util.Base64;
 import java.util.HexFormat;
+import java.util.UUID;
 
 @Service
 public class AuthService {
 
     private static final SecureRandom SECURE_RANDOM = new SecureRandom();
     private static final int REFRESH_TOKEN_BYTES = 32; // 256-bit entropy
+    private static final Logger log = LoggerFactory.getLogger(AuthService.class);
 
     private final UserRepository userRepository;
     private final RefreshTokenRepository refreshTokenRepository;
@@ -35,6 +42,7 @@ public class AuthService {
     private final AuthenticationManager authenticationManager;
     private final JwtService jwtService;
     private final JwtProperties jwtProperties;
+
 
     public AuthService(UserRepository userRepository,
                        RefreshTokenRepository refreshTokenRepository,
@@ -120,4 +128,42 @@ public class AuthService {
             throw new IllegalStateException("SHA-256 algorithm not available", e);
         }
     }
+    @Transactional(noRollbackFor = UnauthorizedException.class)
+public AuthResponse refresh(String rawRefreshToken, String ipAddress) {
+    String hash = sha256Hex(rawRefreshToken);
+
+    RefreshToken token = refreshTokenRepository.findByTokenHash(hash)
+            .orElseThrow(() -> new UnauthorizedException("Invalid refresh token."));
+
+    if (token.isRevoked()) {
+        log.warn("Refresh token reuse detected for user {}. Revoking all active tokens.",
+                token.getUserId());
+        refreshTokenRepository.revokeAllActiveByUserId(token.getUserId());
+        throw new UnauthorizedException("Refresh token is no longer valid.");
+    }
+
+    if (token.getExpiresAt().isBefore(Instant.now())) {
+        throw new UnauthorizedException("Refresh token expired.");
+    }
+
+    token.setRevoked(true);
+
+    User user = userRepository.findById(token.getUserId())
+            .orElseThrow(() -> new UnauthorizedException("User not found."));
+
+    return issueTokens(user, ipAddress);
+}
+
+@Transactional
+public void logout(String rawRefreshToken) {
+    String hash = sha256Hex(rawRefreshToken);
+    refreshTokenRepository.findByTokenHash(hash)
+            .ifPresent(token -> token.setRevoked(true));
+}
+
+@Transactional
+public void logoutAll(UUID userId) {
+    int revoked = refreshTokenRepository.revokeAllActiveByUserId(userId);
+    log.info("Logged out all sessions for user {} ({} tokens revoked).", userId, revoked);
+}
 }
