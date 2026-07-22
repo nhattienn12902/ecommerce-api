@@ -19,7 +19,12 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<ErrorResponse> handleNotFound(ResourceNotFoundException ex, HttpServletRequest request) {
-        return build(HttpStatus.NOT_FOUND, "RESOURCE_NOT_FOUND", ex.getMessage(), request);
+        return buildDebug(HttpStatus.NOT_FOUND, "RESOURCE_NOT_FOUND", ex.getMessage(), request);
+    }
+
+    @ExceptionHandler(NoResourceFoundException.class)
+    public ResponseEntity<ErrorResponse> handleNoResourceFound(NoResourceFoundException ex, HttpServletRequest request) {
+        return buildDebug(HttpStatus.NOT_FOUND, "RESOURCE_NOT_FOUND", "The requested resource was not found.", request);
     }
 
     @ExceptionHandler(DuplicateResourceException.class)
@@ -36,11 +41,6 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(BusinessException.class)
     public ResponseEntity<ErrorResponse> handleBusiness(BusinessException ex, HttpServletRequest request) {
         return build(HttpStatus.UNPROCESSABLE_CONTENT, ex.getErrorCode(), ex.getMessage(), request);
-    }
-
-    @ExceptionHandler(NoResourceFoundException.class)
-    public ResponseEntity<ErrorResponse> handleNoResourceFound(NoResourceFoundException ex, HttpServletRequest request) {
-        return build(HttpStatus.NOT_FOUND, "RESOURCE_NOT_FOUND", "The requested resource was not found.", request);
     }
 
     @ExceptionHandler(org.springframework.security.core.AuthenticationException.class)
@@ -98,5 +98,12 @@ public class GlobalExceptionHandler {
         return UUID.randomUUID().toString().substring(0, 8);
     }
 
+    private ResponseEntity<ErrorResponse> buildDebug(HttpStatus status, String error,
+                                                  String message, HttpServletRequest request) {
+    String traceId = traceId();
+    log.debug("{} [{}]: {} at {}", error, traceId, message, request.getRequestURI());
+    ErrorResponse body = ErrorResponse.of(status.value(), error, message, request.getRequestURI(), traceId);
+    return ResponseEntity.status(status).body(body);
+}
     
 }
