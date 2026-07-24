@@ -27,6 +27,7 @@ public class ProductImage {
     private String imageUrl;
 
     @Column(nullable = false)
+    @Builder.Default
     private boolean isPrimary = false;
 
     @CreationTimestamp
