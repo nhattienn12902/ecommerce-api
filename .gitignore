@@ -31,3 +31,7 @@ build/
 
 ### VS Code ###
 .vscode/
+
+# Local environment — contains credentials, never commit
+application-local.yml
+src/main/resources/application-local.yml

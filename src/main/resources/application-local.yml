@@ -8,8 +8,13 @@ spring:
       host: localhost
       port: 6379
 
-  # application-local.yml (dev only)
-# application-local.yml
 app:
   jwt:
     secret: local-dev-only-secret-change-me-min-32-bytes-please-xxxx
+  aws:
+    s3:
+      bucket-name: ecommerce-api-nhattienn-prod
+      region: us-east-1
+      access-key: REPLACE_WITH_YOUR_ACCESS_KEY
+      secret-key: REPLACE_WITH_YOUR_SECRET_KEY
+      presigned-url-expiration: 15 # minutes
