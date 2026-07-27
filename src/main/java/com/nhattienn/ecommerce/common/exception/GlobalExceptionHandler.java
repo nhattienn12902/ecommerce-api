@@ -1,6 +1,8 @@
 package com.nhattienn.ecommerce.common.exception;
 
 import com.nhattienn.ecommerce.common.response.ErrorResponse;
+import com.nhattienn.ecommerce.storage.StorageException;
+
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -85,6 +87,17 @@ public class GlobalExceptionHandler {
                 request.getRequestURI(), traceId);
         return ResponseEntity.internalServerError().body(body);
     }
+
+    @ExceptionHandler(StorageException.class)
+        public ResponseEntity<ErrorResponse> handleStorage(StorageException ex, HttpServletRequest request) {
+            String traceId = traceId();
+            log.error("STORAGE_ERROR [{}] at {}", traceId, request.getRequestURI(), ex);
+            ErrorResponse body = ErrorResponse.of(
+            HttpStatus.INTERNAL_SERVER_ERROR.value(), "STORAGE_ERROR",
+            "File operation failed. Please try again.",
+            request.getRequestURI(), traceId);
+            return ResponseEntity.internalServerError().body(body);
+}
 
     private ResponseEntity<ErrorResponse> build(HttpStatus status, String error,
                                                 String message, HttpServletRequest request) {
