@@ -7,6 +7,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -97,7 +98,20 @@ public class GlobalExceptionHandler {
             "File operation failed. Please try again.",
             request.getRequestURI(), traceId);
             return ResponseEntity.internalServerError().body(body);
-}
+    }
+
+    @ExceptionHandler(ObjectOptimisticLockingFailureException.class)
+        public ResponseEntity<ErrorResponse> handleOptimisticLock(
+            ObjectOptimisticLockingFailureException ex, HttpServletRequest request) {
+            String traceId = traceId();
+                log.warn("OPTIMISTIC_LOCK_CONFLICT [{}] at {}: {}",
+                traceId, request.getRequestURI(), ex.getMessage());
+            ErrorResponse body = ErrorResponse.of(
+            HttpStatus.CONFLICT.value(), "CONCURRENT_MODIFICATION",
+            "Inventory changed while processing your order. Please review your cart and try again.",
+            request.getRequestURI(), traceId);
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
+    }
 
     private ResponseEntity<ErrorResponse> build(HttpStatus status, String error,
                                                 String message, HttpServletRequest request) {
