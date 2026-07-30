@@ -1,0 +1,30 @@
+# Build output — được build lại trong container, không copy từ host
+target/
+
+# IDE & OS files
+.idea/
+*.iml
+.vscode/
+.DS_Store
+
+# Git
+.git/
+.gitignore
+
+# Secrets — TUYỆT ĐỐI không đưa vào image
+application-local.yml
+**/application-local.yml
+.env
+*.pem
+*.key
+
+# Docs & misc
+README.md
+*.md
+docker-compose*.yml
+Dockerfile
+.dockerignore
+
+# Logs
+*.log
+logs/
