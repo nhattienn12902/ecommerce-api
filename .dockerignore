@@ -1,5 +1,7 @@
 # Build output — được build lại trong container, không copy từ host
-target/
+# Ignore everything in target/ EXCEPT the built JAR
+target/*
+!target/*.jar
 
 # IDE & OS files
 .idea/
