@@ -1,0 +1,16 @@
+# Test-only config. Committed to git — NO real secrets.
+# DB/Redis come from Testcontainers. This supplies the app-specific
+# properties that would otherwise come from application-local.yml (gitignored).
+
+app:
+  jwt:
+    secret: test-only-jwt-secret-not-a-real-key-min-32-bytes-xxxxxxxx
+    access-token-ttl: 15m
+    refresh-token-ttl: 7d
+  aws:
+    s3:
+      bucket-name: test-bucket
+      region: us-east-1
+      access-key: test-access-key
+      secret-key: test-secret-key
+      presigned-url-expiration: 15
