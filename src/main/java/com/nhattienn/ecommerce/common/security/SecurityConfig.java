@@ -14,7 +14,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-
+import org.springframework.boot.security.autoconfigure.actuate.web.servlet.EndpointRequest;
 @Configuration
 @EnableMethodSecurity
 public class SecurityConfig {
@@ -46,8 +46,11 @@ public class SecurityConfig {
             .sessionManagement(session ->
                     session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
-        .requestMatchers("/api/v1/auth/logout-all").authenticated()   // ← PHẢI đứng trước
-        .requestMatchers(PUBLIC_PATHS).permitAll()                    // chứa /api/v1/auth/**
+        .requestMatchers(EndpointRequest.to("health", "info", "prometheus")).permitAll()
+        .requestMatchers(EndpointRequest.toAnyEndpoint()).denyAll()
+
+        .requestMatchers("/api/v1/auth/logout-all").authenticated()
+        .requestMatchers(PUBLIC_PATHS).permitAll()
         .requestMatchers(HttpMethod.GET, "/api/v1/products/**", "/api/v1/categories/**").permitAll()
         .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
         .anyRequest().authenticated())
