@@ -95,8 +95,4 @@ jobs:
           host: ${{ secrets.EC2_HOST }}
           username: ec2-user
           key: ${{ secrets.EC2_SSH_KEY }}
-          script: |
-            cd ~/app
-            docker compose pull
-            docker compose up -d
-            docker image prune -f
+          script: bash ~/app/start.sh
