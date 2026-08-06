@@ -85,14 +85,49 @@ jobs:
   # JOB 3 — Deploy lên EC2. CHỈ chạy sau khi docker-push thành công.
   # ===========================================================================
   deploy:
-    needs: docker-push
-    if: github.event_name == 'push'
+    needs: docker-push          # chạy sau khi image đã push GHCR
     runs-on: ubuntu-latest
+    permissions:
+      id-token: write           # BẮT BUỘC cho OIDC
+      contents: read
     steps:
-      - name: Deploy to EC2
-        uses: appleboy/ssh-action@v1
+      - name: Configure AWS credentials via OIDC
+        uses: aws-actions/configure-aws-credentials@v4
         with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ec2-user
-          key: ${{ secrets.EC2_SSH_KEY }}
-          script: bash ~/app/start.sh
+          role-to-assume: arn:aws:iam::881107655832:role/github-actions-deploy-role
+          aws-region: us-east-1
+
+      - name: Deploy via SSM Run Command
+        run: |
+          set -euo pipefail
+          INSTANCE_ID=i-0950813f79d0d6b6e
+
+          command_id=$(aws ssm send-command \
+            --instance-ids "$INSTANCE_ID" \
+            --document-name "AWS-RunShellScript" \
+            --comment "Deploy ${{ github.sha }}" \
+            --parameters commands='runuser -l ec2-user -c "cd /home/ec2-user/app && ./start.sh"' \
+            --query "Command.CommandId" --output text)
+          echo "Command ID: $command_id"
+
+          sleep 5   # tránh InvocationDoesNotExist khi poll quá sớm
+          aws ssm wait command-executed \
+            --command-id "$command_id" --instance-id "$INSTANCE_ID" || true
+
+          status=$(aws ssm get-command-invocation \
+            --command-id "$command_id" --instance-id "$INSTANCE_ID" \
+            --query "Status" --output text)
+          echo "=== STDOUT ==="
+          aws ssm get-command-invocation \
+            --command-id "$command_id" --instance-id "$INSTANCE_ID" \
+            --query "StandardOutputContent" --output text
+
+          if [ "$status" != "Success" ]; then
+            echo "=== STDERR ==="
+            aws ssm get-command-invocation \
+              --command-id "$command_id" --instance-id "$INSTANCE_ID" \
+              --query "StandardErrorContent" --output text
+            echo "Deploy FAILED with status: $status"
+            exit 1
+          fi
+          echo "Deploy succeeded."
