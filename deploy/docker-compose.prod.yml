@@ -1,0 +1,26 @@
+services:
+  redis:
+    image: redis:7-alpine
+    container_name: ecommerce-redis
+    restart: unless-stopped
+
+  app:
+    image: ghcr.io/nhattienn12902/ecommerce-api:latest
+    container_name: ecommerce-app
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8080:8080"
+    depends_on:
+      - redis
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      SPRING_DATASOURCE_URL: jdbc:postgresql://ecommerce-db.cihaouqcce1r.us-east-1.rds.amazonaws.com:5432/ecommerce
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: ${SPRING_DATASOURCE_PASSWORD}
+      SPRING_DATA_REDIS_HOST: redis
+      APP_JWT_SECRET: ${APP_JWT_SECRET}
+      APP_AWS_S3_ACCESS_KEY: ${APP_AWS_S3_ACCESS_KEY}
+      APP_AWS_S3_SECRET_KEY: ${APP_AWS_S3_SECRET_KEY}
+      APP_AWS_S3_BUCKET_NAME: ecommerce-api-nhattienn-prod
+      APP_AWS_S3_REGION: us-east-1
+      APP_AWS_S3_PRESIGNED_URL_EXPIRATION: 15
