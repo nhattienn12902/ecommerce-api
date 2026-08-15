@@ -44,3 +44,10 @@ echo "Cleaning up old images..."
 docker image prune -f
 
 echo "Done."
+
+export GF_ADMIN_PASSWORD=$(aws ssm get-parameter \
+  --name "/ecommerce/grafana-admin-password" \
+  --with-decryption \
+  --query "Parameter.Value" \
+  --output text \
+  --region us-east-1)
