@@ -107,7 +107,7 @@ jobs:
             --instance-ids "$INSTANCE_ID" \
             --document-name "AWS-RunShellScript" \
             --comment "Deploy ${{ github.sha }}" \
-            --parameters '{"commands":["runuser -l ec2-user -c \"cd /home/ec2-user/ecommerce-api && git fetch origin && git checkout ${{ github.sha }} && ./deploy/start.sh\""]}' \
+            --parameters '{"commands":["runuser -l ec2-user -c \"cd /home/ec2-user/ecommerce-api && git fetch origin main && git checkout --force ${{ github.sha }} && ./deploy/start.sh\""]}' \
             --query "Command.CommandId" \
             --output text)
 
