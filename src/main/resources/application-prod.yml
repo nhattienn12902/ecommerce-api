@@ -1,16 +1,13 @@
 spring:
-  datasource:
-    url: ${DB_URL}
-    username: ${DB_USERNAME}
-    password: ${DB_PASSWORD}
-  data:
-    redis:
-      host: ${REDIS_HOST}
-      port: ${REDIS_PORT:6379}
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
 
 app:
   jwt:
-    secret: ${JWT_SECRET} 
+    secret: ${APP_JWT_SECRET}
+
 management:
   endpoints:
     web:
@@ -19,3 +16,6 @@ management:
   endpoint:
     health:
       show-details: never
+  metrics:
+    tags:
+      application: ecommerce-api
